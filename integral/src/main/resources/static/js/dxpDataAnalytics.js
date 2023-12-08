@@ -21,7 +21,8 @@ var showAutoMsgDependFlag = false;
 const isNullOrUndefined = o => o == null;
 var intellisenseViewChartCount = 0;
 var convAIMergeTables = [];
-var eChartsArrList = ['treemap', 'sunburst', 'BarAndLine', 'heatMap', 'BasicAreaChart', 'StackedAreaChart', 'GradStackAreaChart', 'AreaPiecesChart', 'boxplot', 'sankey', 'ganttChart'];
+var plotlyCharts =[ "pie", "bar", "donut", "column", "lines", "scatter","column","funnel","scatterpolar"];
+var eChartsArrList = ['treemap', 'sunburst', 'BarAndLine', 'heatMap', 'BasicAreaChart', 'StackedAreaChart', 'GradStackAreaChart', 'AreaPiecesChart', 'boxplot', 'sankey', 'ganttChart','candlestick'];
 
 //function visualizationDivToggle() {
 //	$('.visualizationMainDivwrapper').toggleClass('width60');
@@ -781,7 +782,7 @@ var getValueAndPercentageLabelFormatter = function(params) {
 function getSunburstChart(chartId, result, count, chartType, saveType) {
     chartType = 'sunburst';
     var chartUpper = chartType.toUpperCase();
-    var chartTitle = $("#" + chartUpper + "TITLEECHARTS").val();
+    var chartTitle = $("#" + chartUpper + "TITLEECHARTS").val() ?? result['chartTitle'];
     isCurrencyConversionEvent = $("#isCurrencyConversionEvent").val();
     if (isCurrencyConversionEvent === undefined || isCurrencyConversionEvent === '') {
         isCurrencyConversionEvent = result['isCurrencyConversionEvent'];
@@ -817,7 +818,7 @@ function getSunburstChart(chartId, result, count, chartType, saveType) {
     var optionObjectEcharts = result['layout'];
     var seriesObjectEcharts = result['dataPropObject'];
     if (chartTitle === undefined || chartTitle === '' || chartTitle === null) {
-        chartTitle = optionObjectEcharts['text'];
+        chartTitle = optionObjectEcharts['text'] ?? result['chartTitle'];
     }
     var tableName = result['tableName'], linkColors;
 
@@ -957,7 +958,7 @@ function getSunburstChart(chartId, result, count, chartType, saveType) {
 function getTreeMapChart(chartId, result, count, chartType, saveType, axisColumns, filterCondition) {
     chartType = 'treemap';
     var chartUpper = chartType.toUpperCase();
-    var chartTitle = $("#" + chartUpper + "TITLEECHARTS").val();
+    var chartTitle = $("#" + chartUpper + "TITLEECHARTS").val()  ?? result['chartTitle'];
     isCurrencyConversionEvent = $("#isCurrencyConversionEvent").val();
     if (isCurrencyConversionEvent === undefined || isCurrencyConversionEvent === '') {
         isCurrencyConversionEvent = result['isCurrencyConversionEvent'];
@@ -1019,9 +1020,12 @@ function getTreeMapChart(chartId, result, count, chartType, saveType, axisColumn
         var formattedValue = formatnumber(data.value);
         return "(" + label + "," + formattedValue + ")";
     };
-    var chartCOnfigObjStr = JSON.parse(result['chartCOnfigObjStr']);
-    var chartHoverData = chartCOnfigObjStr['TREEMAPHOVERLABELDATA'];
-    var chartDataVisible = chartCOnfigObjStr['TREEMAPLABELDATA'];
+   var chartCOnfigObjStr,chartHoverData ='x+y',chartDataVisible ='x+y';
+        chartCOnfigObjStr = JSON.parse(result['chartCOnfigObjStr']);
+   	if(chartCOnfigObjStr != null && chartCOnfigObjStr != undefined && !jQuery.isEmptyObject(chartCOnfigObjStr)){
+        chartHoverData = chartCOnfigObjStr['TREEMAPHOVERLABELDATA'] ?? 'x+y';
+        chartDataVisible = chartCOnfigObjStr['TREEMAPLABELDATA'] ?? 'x+y';
+   	}
     var option = {
         tooltip: {
             show: true,
@@ -4126,7 +4130,7 @@ function getChart(chartId, count, chartType, joinQuery, selectedValue, dragtable
         stopLoader();
         return;
     }
-    if (chartType != '' && chartType != null && axisColumns != null && valuesColumns != null && !(axisColumns.length >= 1 && valuesColumns.length >= 1)) {
+    if (chartType != '' && chartType != null && (chartType != 'indicator') && axisColumns != null && valuesColumns != null && !(axisColumns.length >= 1 && valuesColumns.length >= 1)) {
         showStr("Message", "Please Select Atleast One Axis Column and One Value Column");
     }
     if (chartType != '' && chartType != null && (chartType == 'boxplot') && comboColumns != null && comboColumns != undefined && !comboColumns.length >= 1) {
@@ -4263,7 +4267,7 @@ function getChart(chartId, count, chartType, joinQuery, selectedValue, dragtable
 	var colorsObj = {
         "clrs": ["#EAC117", "#347C2C", "#806517", "#E66C2C", "#5C3317", "#C11B17"]
     };
-	data['colorsObj'] = colorsObj;
+	data['colorsObj'] = JSON.stringify(colorsObj);
 	data['axisColumns'] = JSON.stringify(axisColumns);
 	data['valuesColumns'] = JSON.stringify(valuesColumns);
 	data['comboColumns'] = JSON.stringify(comboColumns);
@@ -6950,8 +6954,10 @@ function saveVisualizationData() {
 			filteredChartOptAllObj[newKey] = value;
 		});
 		var totChartId = chartId.replace("visionVisualizeChart", "visionVisualizeChartId");
-		var colorsObj = $("#" + totChartId).attr("colors");
-
+		//var colorsObj = $("#" + totChartId).attr("colors");
+        		var colorsObj = {
+                    "clrs": ["#EAC117", "#347C2C", "#806517", "#E66C2C", "#5C3317", "#C11B17"]
+                };
 		var data = {};
 		data['axisColumns'] = JSON.stringify(axisColumns);
 		data['valuesColumns'] = JSON.stringify(valuesColumns);
@@ -7311,7 +7317,7 @@ function getVisualizationchart(dashbordname, dashbordTittle) {
 						var cardTrendType = dataarr[i]['cardTrendType'];
 						var cardTrend = dataarr[i]['cardTrend'];
 						var zAxix = dataarr[i]['zAxis'];
-						var echarts = ['treemap', 'sunburst', 'BarAndLine', 'heatMap', 'BasicAreaChart', 'StackedAreaChart', 'GradStackAreaChart', 'AreaPiecesChart', 'ganttChart', 'candlestick', 'geochart'];
+						var echarts = ['treemap', 'sunburst', 'BarAndLine', 'heatMap', 'BasicAreaChart', 'StackedAreaChart', 'GradStackAreaChart', 'AreaPiecesChart', 'ganttChart', 'candlestick', 'geochart','sankey'];
 						if (type != null && type != '' && type != undefined && type == 'COMPARE_FILTER') {
 							$("#visionDashBoardHomeFilterId").show();
 							$("#visionDashBoardHomeCompareFilterId").hide();
@@ -7349,8 +7355,10 @@ function getVisualizationchart(dashbordname, dashbordTittle) {
 								+ "<input type='hidden' id='" + chartid + "_TotalChartCount' value='0'/>"
 								+ "<input type='hidden' id='" + chartid + "_options' value=''/>"
 								+ "<input type='hidden' id='" + chartid + "_chartType' value='" + type + "'/>"
-								+ "<input type='hidden' id='" + chartid + "_count' value='" + count + "'/>";
-							if (type != null && type != '' && type != undefined && echarts.indexOf(type) > -1) {
+								+ "<input type='hidden' id='" + chartid + "_count' value='" + count + "'/>"
+								+ "<input type='hidden' id='" + chartid + "_dynamic_XAxisLength' value='" + JSON.parse(XAxix).length + "'/>"
+                                + "<input type='hidden' id='" + chartid + "_dynamic_YAxisLength' value='" + JSON.parse(yAxix).length + "'/>";
+							if (type != null && type != '' && type != undefined && eChartsArrList.indexOf(type) > -1) {
 								chartDivId += "<div id = '" + chartid + "_toolBox' class='iconsDiv' style='position: absolute;top: 2px;right: 3px;height: 99%; background: #f1f1f1;height: 349px;'><ul></ul></div>"
 									+ "<div id='" + chartid + "_radioButtons' class='visionVisualizeRadioButtonsClass'></div>";
 							}
@@ -7387,6 +7395,8 @@ function getVisualizationchart(dashbordname, dashbordTittle) {
 }
 function getVisualizeChart(chartId, chartType, axix, values, table, aggColumnName, filterCondition, chartPropObj, chartConfigObj, createcount, labelLegend, colorsObj, comboValue, chartConfigToggleStatus, compareChartsFlag, comparechartFilterObj, fetchQuery, radioButtons, currencyConversionStrObject, zAxix) {
 	// var joinQuery = $("#visionVisualizeConfigJoinQuery0").val();
+	$("#" + chartId + "_toolBox").hide();
+    	$("#" + chartId +"_legends").show();
 	var axisColumns = [];
 	var valuesColumns = [];
 	var tablesObj = [];
@@ -7576,15 +7586,15 @@ function getVisualizeChart(chartId, chartType, axix, values, table, aggColumnNam
 					return;
 				}
 				else if (chartType != null && chartType != '' && chartType != undefined && chartType == 'candlestick') {
-					getCandlestickChart(chartId, response, createcount, chartType, "Y");
+					getCandlestickChart(chartId, response, createcount, chartType);
 					return;
 				}
 				else if (chartType != null && chartType != '' && chartType != undefined && chartType == 'geochart') {
-					google.charts.setOnLoadCallback(getGeoChart(chartId, response, createcount, chartType, "Y"));
+					google.charts.setOnLoadCallback(getGeoChart(chartId, response, createcount, chartType));
 					return;
 				}
 				else if (chartType != null && chartType != '' && chartType != undefined && chartType == 'sankey') {
-					getSankeyChart(chartId, response, createcount, chartType, "Y");
+					getSankeyChart(chartId, response, createcount, chartType);
 					return;
 				}
 				var iconArrowUp = {
@@ -7773,7 +7783,9 @@ function getVisualizeChart(chartId, chartType, axix, values, table, aggColumnNam
 							}
 						}, {
 							name: 'Chart Types', icon: AssignUser, click: function() {
-								changegraph(chartId, chartType, layout, data, createcount, event);
+							changegraph(chartId, chartType, layout, data, createcount, Object.keys(response.data).length);
+//							}
+//								changegraph(chartId, chartType, layout, data, createcount, event);
 							}
 						}, {
 							name: 'Reset', icon: reset, click: function(chartId) {
@@ -16633,16 +16645,17 @@ function getEchartHeatMap(chartId, result, count) {
         useDirtyRect: false
     });
     var labelData, hoverlabeldata, labelPosition, gridWidth, gridHeight, visualMapOrientation, chartTitle;
-    if (chartCOnfigObjStr != null || chartCOnfigObjStr != undefined || chartCOnfigObjStr != '') {
-        chartTitle = chartCOnfigObjStr['HEATMAPCHARTTITLE'] || $('#HEATMAPCHARTTITLE' + count).val();
-        labelData = chartCOnfigObjStr['HEATMAPLABELDATA'] || $('#HEATMAPLABELDATA' + count).val();
+    if (chartCOnfigObjStr != null || chartCOnfigObjStr != undefined ) {
+        chartTitle = chartCOnfigObjStr['HEATMAPCHARTTITLE'] || $('#HEATMAPCHARTTITLE' + count).val() || result['chartTitle'];
+                labelData = chartCOnfigObjStr['HEATMAPLABELDATA'] || $('#HEATMAPLABELDATA' + count).val();
         hoverlabeldata = chartCOnfigObjStr['HEATMAPHOVERLABELDATA'] || $('#HEATMAPHOVERLABELDATA' + count).val();
         labelPosition = chartCOnfigObjStr['HEATMAPLABELPOSITION'] || $('#HEATMAPLABELPOSITION' + count).val();
         gridWidth = chartCOnfigObjStr['HEATMAPGRIDWIDTH'] || $('#HEATMAPGRIDWIDTH' + count).val();
         gridHeight = chartCOnfigObjStr['HEATMAPGRIDHEIGHT'] || $('#HEATMAPGRIDHEIGHT' + count).val();
         visualMapOrientation = chartCOnfigObjStr['HEATMAPVISUALMAPORIENTATION'] || $('#HEATMAPVISUALMAPORIENTATION' + count).val();
     } else {
-        labelData = $('#HEATMAPLABELDATA' + count).val();
+    chartTitle =result['chartTitle'];
+            labelData = $('#HEATMAPLABELDATA' + count).val();
         hoverlabeldata = $('#HEATMAPHOVERLABELDATA' + count).val();
         labelPosition = $('#HEATMAPLABELPOSITION' + count).val();
         gridWidth = $('#HEATMAPGRIDWIDTH' + count).val();
@@ -16736,6 +16749,7 @@ function getEchartHeatMap(chartId, result, count) {
     getToolBox(chartId, chartType, tableName, chartCOnfigObjStr, result, count, 1);
     if (option && typeof option === 'object') {
         myChart.setOption(option);
+        $("#" + chartId).attr("echartOption", JSON.stringify(option));
 
     }
     $("#" + chartId).parent().resize(function(event, ui) {
@@ -16901,6 +16915,7 @@ function getBarChartRotation(chartId, data, count, chartType) {
 	option['legend'] = legend;
 	if (option && typeof option === 'object') {
 		myChart.setOption(option);
+		$("#" + chartId).attr("echartOption", JSON.stringify(option));
 	}
 }
 
@@ -17101,56 +17116,71 @@ function getToolBox(chartId, chartType, tableName, chartCOnfigObjStr, response, 
 	$("#" + chartId + "_legends").hide();
 	var li = '';
 	if (['SunBurst', 'TreeMap'].includes(chartType)) {
-		li = "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Date Columns\" style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-			+ "<svg viewBox=\"0 0 448 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"getCalendarColumns('" + chartId + "','" + chartType + "','" + tableName + "')\">"
-			+ "<path d='M539.586,62.553h-37.954v14.052c0,24.327-18.102,44.117-40.349,44.117h-15.329c-22.247,0-40.349-19.79-40.349-44.117    V62.553H199.916v14.052c0,24.327-18.102,44.117-40.349,44.117h-15.329c-22.248,0-40.349-19.79-40.349-44.117V62.553H70.818    c-21.066,0-38.15,16.017-38.15,35.764v476.318c0,19.784,17.083,35.764,38.15,35.764h468.763c21.085,0,38.149-15.984,38.149-35.764    V98.322C577.735,78.575,560.671,62.553,539.586,62.553z M527.757,557.9l-446.502-0.172V173.717h446.502V557.9z'></path>"
-			+ "</svg></li>"
-			+ "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Apply Radio Buttons\" style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-			+ "<svg viewBox=\"0 0 512 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"getChartRadioButtons('" + chartId + "','" + chartType + "')\">"
-			+ "<path d='M160 256C160 202.1 202.1 160 256 160C309 160 352 202.1 352 256C352 309 309 352 256 352C202.1 352 160 309 160 256zM512 256C512 397.4 397.4 512 256 512C114.6 512 0 397.4 0 256C0 114.6 114.6 0 256 0C397.4 0 512 114.6 512 256zM256 48C141.1 48 48 141.1 48 256C48 370.9 141.1 464 256 464C370.9 464 464 370.9 464 256C464 141.1 370.9 48 256 48z'></path>"
-			+ "</svg></li>";
+    li = `<li rel="tooltip" class="modebar-btn" title="Date Columns" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+        <svg viewBox="0 0 448 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="getCalendarColumns('${chartId}','${chartType}','${tableName}')">
+            <path d='M539.586,62.553h-37.954v14.052c0,24.327-18.102,44.117-40.349,44.117h-15.329c-22.247,0-40.349-19.79-40.349-44.117V62.553H199.916v14.052c0,24.327-18.102,44.117-40.349,44.117h-15.329c-22.248,0-40.349-19.79-40.349-44.117V62.553H70.818c-21.066,0-38.15,16.017-38.15,35.764v476.318c0,19.784,17.083,35.764,38.15,35.764h468.763c21.085,0,38.149-15.984,38.149-35.764V98.322C577.735,78.575,560.671,62.553,539.586,62.553z M527.757,557.9l-446.502-0.172V173.717h446.502V557.9z'></path>
+        </svg>
+    </li>
+    <li rel="tooltip" class="modebar-btn" title="Apply Radio Buttons" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+        <svg viewBox="0 0 512 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="getChartRadioButtons('${chartId}','${chartType}')">
+            <path d='M160 256C160 202.1 202.1 160 256 160C309 160 352 202.1 352 256C352 309 309 352 256 352C202.1 352 160 309 160 256zM512 256C512 397.4 397.4 512 256 512C114.6 512 0 397.4 0 256C0 114.6 114.6 0 256 0C397.4 0 512 114.6 512 256zM256 48C141.1 48 48 141.1 48 256C48 370.9 141.1 464 256 464C370.9 464 464 370.9 464 256C464 141.1 370.9 48 256 48z'></path>
+        </svg>
+    </li>`;
 	}
-	li += "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Scroll Up\"  style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-		+ "<svg viewBox=\"0 0 448 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"scrollUp('" + chartId + "','" + chartType + "')\">"
-		+ "<path d='M4.29289 15.7071C3.90237 15.3166 3.90237 14.6834 4.29289 14.2929L9.29289 9.29289C9.68342 8.90237 10.3166 8.90237 10.7071 9.29289L15.7071 14.2929C16.0976 14.6834 16.0976 15.3166 15.7071 15.7071C15.3166 16.0976 14.6834 16.0976 14.2929 15.7071L10 11.4142L5.70711 15.7071C5.31658 16.0976 4.68342 16.0976 4.29289 15.7071ZM4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289L9.29289 3.29289C9.68342 2.90237 10.3166 2.90237 10.7071 3.29289L15.7071 8.29289C16.0976 8.68342 16.0976 9.31658 15.7071 9.70711C15.3166 10.0976 14.6834 10.0976 14.2929 9.70711L10 5.41421L5.70711 9.70711C5.31658 10.0976 4.68342 10.0976 4.29289 9.70711Z'></path>"
-		+ "</svg></li>"
-	li += "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Save As Image\"  style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-		+ "<svg viewBox=\"0 0 448 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"saveChartAsImage('" + chartId + "','" + chartType + "')\">"
-		+ "<path d='m500 450c-83 0-150-67-150-150 0-83 67-150 150-150 83 0 150 67 150 150 0 83-67 150-150 150z m400 150h-120c-16 0-34 13-39 29l-31 93c-6 15-23 28-40 28h-340c-16 0-34-13-39-28l-31-94c-6-15-23-28-40-28h-120c-55 0-100-45-100-100v-450c0-55 45-100 100-100h800c55 0 100 45 100 100v450c0 55-45 100-100 100z m-400-550c-138 0-250 112-250 250 0 138 112 250 250 250 138 0 250-112 250-250 0-138-112-250-250-250z m365 380c-19 0-35 16-35 35 0 19 16 35 35 35 19 0 35-16 35-35 0-19-16-35-35-35z'></path>"
-		+ "</svg></li>"
-	li += "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Show Data\"  style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-		+ "<svg viewBox=\"0 0 448 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"getGridData('','','" + chartId + "','')\">"
-		+ "<path d='M448 32C483.3 32 512 60.65 512 96V416C512 451.3 483.3 480 448 480H64C28.65 480 0 451.3 0 416V96C0 60.65 28.65 32 64 32H448zM152 96H64V160H152V96zM208 160H296V96H208V160zM448 96H360V160H448V96zM64 288H152V224H64V288zM296 224H208V288H296V224zM360 288H448V224H360V288zM152 352H64V416H152V352zM208 416H296V352H208V416zM448 352H360V416H448V352z'></path>"
-		+ "</svg></li>"
 
-		+ "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Filter Chart\" style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-		+ "<svg viewBox=\"0 0 448 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"getfilterData('" + chartId + "','" + tableName + "','" + chartType + "')\">"
-		+ "<path d='M3.853 54.87C10.47 40.9 24.54 32 40 32H472C487.5 32 501.5 40.9 508.1 54.87C514.8 68.84 512.7 85.37 502.1 97.33L320 320.9V448C320 460.1 313.2 471.2 302.3 476.6C291.5 482 278.5 480.9 268.8 473.6L204.8 425.6C196.7 419.6 192 410.1 192 400V320.9L9.042 97.33C-.745 85.37-2.765 68.84 3.854 54.87L3.853 54.87z'></path>"
-		+ "</svg></li>"
-		+ "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Delete Chart\" style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-		+ "<svg viewBox=\"0 0 448 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"deleteVisualizeChart('" + chartId + "','" + tableName + "','" + chartType + "')\">"
-		+ "<path d='M135.2 17.69C140.6 6.848 151.7 0 163.8 0H284.2C296.3 0 307.4 6.848 312.8 17.69L320 32H416C433.7 32 448 46.33 448 64C448 81.67 433.7 96 416 96H32C14.33 96 0 81.67 0 64C0 46.33 14.33 32 32 32H128L135.2 17.69zM31.1 128H416V448C416 483.3 387.3 512 352 512H95.1C60.65 512 31.1 483.3 31.1 448V128zM111.1 208V432C111.1 440.8 119.2 448 127.1 448C136.8 448 143.1 440.8 143.1 432V208C143.1 199.2 136.8 192 127.1 192C119.2 192 111.1 199.2 111.1 208zM207.1 208V432C207.1 440.8 215.2 448 223.1 448C232.8 448 240 440.8 240 432V208C240 199.2 232.8 192 223.1 192C215.2 192 207.1 199.2 207.1 208zM304 208V432C304 440.8 311.2 448 320 448C328.8 448 336 440.8 336 432V208C336 199.2 328.8 192 320 192C311.2 192 304 199.2 304 208z'></path>"
-		+ "</svg></li>"
-		+ "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Expand Chart\" style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-		+ "<svg viewBox=\"0 0 448 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"expandEChart('" + chartId + "','" + chartType + "')\">"
-		+ "<path d='M447.1 319.1v135.1c0 13.26-10.75 23.1-23.1 23.1h-135.1c-12.94 0-24.61-7.781-29.56-19.75c-4.906-11.1-2.203-25.72 6.937-34.87l30.06-30.06L224 323.9l-71.43 71.44l30.06 30.06c9.156 9.156 11.91 22.91 6.937 34.87C184.6 472.2 172.9 479.1 160 479.1H24c-13.25 0-23.1-10.74-23.1-23.1v-135.1c0-12.94 7.781-24.61 19.75-29.56C23.72 288.8 27.88 288 32 288c8.312 0 16.5 3.242 22.63 9.367l30.06 30.06l71.44-71.44L84.69 184.6L54.63 214.6c-9.156 9.156-22.91 11.91-34.87 6.937C7.798 216.6 .0013 204.9 .0013 191.1v-135.1c0-13.26 10.75-23.1 23.1-23.1h135.1c12.94 0 24.61 7.781 29.56 19.75C191.2 55.72 191.1 59.87 191.1 63.1c0 8.312-3.237 16.5-9.362 22.63L152.6 116.7l71.44 71.44l71.43-71.44l-30.06-30.06c-9.156-9.156-11.91-22.91-6.937-34.87c4.937-11.95 16.62-19.75 29.56-19.75h135.1c13.26 0 23.1 10.75 23.1 23.1v135.1c0 12.94-7.781 24.61-19.75 29.56c-11.1 4.906-25.72 2.203-34.87-6.937l-30.06-30.06l-71.43 71.43l71.44 71.44l30.06-30.06c9.156-9.156 22.91-11.91 34.87-6.937C440.2 295.4 447.1 307.1 447.1 319.1z'></path>"
-		+ "</svg></li>"
-		+ "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Edit Chart\" style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-		+ "<svg viewBox=\"0 0 448 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"homePageChartSetting('" + chartId + "','" + chartType + "','" + " " + "','" + chartCOnfigObjStr + "','" + count + "')\">"
-		+ "<path d='M490.3 40.4C512.2 62.27 512.2 97.73 490.3 119.6L460.3 149.7L362.3 51.72L392.4 21.66C414.3-.2135 449.7-.2135 471.6 21.66L490.3 40.4zM172.4 241.7L339.7 74.34L437.7 172.3L270.3 339.6C264.2 345.8 256.7 350.4 248.4 353.2L159.6 382.8C150.1 385.6 141.5 383.4 135 376.1C128.6 370.5 126.4 361 129.2 352.4L158.8 263.6C161.6 255.3 166.2 247.8 172.4 241.7V241.7zM192 63.1C209.7 63.1 224 78.33 224 95.1C224 113.7 209.7 127.1 192 127.1H96C78.33 127.1 64 142.3 64 159.1V416C64 433.7 78.33 448 96 448H352C369.7 448 384 433.7 384 416V319.1C384 302.3 398.3 287.1 416 287.1C433.7 287.1 448 302.3 448 319.1V416C448 469 405 512 352 512H96C42.98 512 0 469 0 416V159.1C0 106.1 42.98 63.1 96 63.1H192z'></path>"
-		+ "</svg></li>"
-		+ "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Change Colors\" style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-		+ "<svg viewBox=\"0 0 448 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"changeEchartColors('" + chartId + "','" + chartType + "','" + colorsObj + "','" + chartCOnfigObjStr + "','" + tempResponse + "')\">"
-		+ "<path d='M512 255.1C512 256.9 511.1 257.8 511.1 258.7C511.6 295.2 478.4 319.1 441.9 319.1H344C317.5 319.1 296 341.5 296 368C296 371.4 296.4 374.7 297 377.9C299.2 388.1 303.5 397.1 307.9 407.8C313.9 421.6 320 435.3 320 449.8C320 481.7 298.4 510.5 266.6 511.8C263.1 511.9 259.5 512 256 512C114.6 512 0 397.4 0 256C0 114.6 114.6 0 256 0C397.4 0 512 114.6 512 256V255.1zM96 255.1C78.33 255.1 64 270.3 64 287.1C64 305.7 78.33 319.1 96 319.1C113.7 319.1 128 305.7 128 287.1C128 270.3 113.7 255.1 96 255.1zM128 191.1C145.7 191.1 160 177.7 160 159.1C160 142.3 145.7 127.1 128 127.1C110.3 127.1 96 142.3 96 159.1C96 177.7 110.3 191.1 128 191.1zM256 63.1C238.3 63.1 224 78.33 224 95.1C224 113.7 238.3 127.1 256 127.1C273.7 127.1 288 113.7 288 95.1C288 78.33 273.7 63.1 256 63.1zM384 191.1C401.7 191.1 416 177.7 416 159.1C416 142.3 401.7 127.1 384 127.1C366.3 127.1 352 142.3 352 159.1C352 177.7 366.3 191.1 384 191.1z'></path>"
-		+ "</svg></li>"
-		+ "<li rel=\"tooltip\" class=\"modebar-btn\" title=\"Reset\" style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-		+ "<svg viewBox=\"0 0 512 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"getVisualizationchart('" + dashBoard + "','" + " " + "')\">"
-		+ "<path d='m786 296v-267q0-15-11-26t-25-10h-214v214h-143v-214h-214q-15 0-25 10t-11 26v267q0 1 0 2t0 2l321 264 321-264q1-1 1-4z m124 39l-34-41q-5-5-12-6h-2q-7 0-12 3l-386 322-386-322q-7-4-13-4-7 2-12 7l-35 41q-4 5-3 13t6 12l401 334q18 15 42 15t43-15l136-114v109q0 8 5 13t13 5h107q8 0 13-5t5-13v-227l122-102q5-5 6-12t-4-13z' transform: 'matrix(1 0 0 -1 0 850)></path>"
-		+ "</svg></li>"
-		+ "<li id='" + chartId + "_echartTypes' rel=\"tooltip\" class=\"modebar-btn\" title=\"Chart Types\" style=\"padding: 4px;border-bottom: 1px solid #ddd;text-align: center;\">"
-		+ "<svg viewBox=\"0 0 448 512\" class=\"icon\" height=\"1em\" width=\"1em\" style=\"fill: rgb(11, 74, 153);\" onclick=\"changegraph('" + chartId + "','" + chartType + "','" + " " + "','" + " " + "','" + count + "','" + noOfDataCount + "')\">"
-		+ "<path d='M424.1 287c-15.13-15.12-40.1-4.426-40.1 16.97V352H336L153.6 108.8C147.6 100.8 138.1 96 128 96H32C14.31 96 0 110.3 0 128s14.31 32 32 32h80l182.4 243.2C300.4 411.3 309.9 416 320 416h63.97v47.94c0 21.39 25.86 32.12 40.99 17l79.1-79.98c9.387-9.387 9.387-24.59 0-33.97L424.1 287zM336 160h47.97v48.03c0 21.39 25.87 32.09 40.1 16.97l79.1-79.98c9.387-9.391 9.385-24.59-.0013-33.97l-79.1-79.98c-15.13-15.12-40.99-4.391-40.99 17V96H320c-10.06 0-19.56 4.75-25.59 12.81L254 162.7L293.1 216L336 160zM112 352H32c-17.69 0-32 14.31-32 32s14.31 32 32 32h96c10.06 0 19.56-4.75 25.59-12.81l40.4-53.87L154 296L112 352z'></path>"
-		+ "</svg></li>";
+	li += `<li rel="tooltip" class="modebar-btn" title="Scroll Up" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+		    <svg viewBox="0 0 448 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="scrollUp('${chartId}','${chartType}')">
+		        <path d='M4.29289 15.7071C3.90237 15.3166 3.90237 14.6834 4.29289 14.2929L9.29289 9.29289C9.68342 8.90237 10.3166 8.90237 10.7071 9.29289L15.7071 14.2929C16.0976 14.6834 16.0976 15.3166 15.7071 15.7071C15.3166 16.0976 14.6834 16.0976 14.2929 15.7071L10 11.4142L5.70711 9.70711C5.31658 16.0976 4.68342 16.0976 4.29289 15.7071ZM4.29289 9.70711C3.90237 9.31658 3.90237 8.68342 4.29289 8.29289L9.29289 3.29289C9.68342 2.90237 10.3166 2.90237 10.7071 3.29289L15.7071 8.29289C16.0976 8.68342 16.0976 9.31658 15.7071 9.70711C15.3166 10.0976 14.6834 10.0976 14.2929 9.70711L10 5.41421L5.70711 9.70711C5.31658 10.0976 4.68342 10.0976 4.29289 9.70711Z'></path>
+		    </svg>
+		</li>
+		<li rel="tooltip" class="modebar-btn" title="Save As Image" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+		    <svg viewBox="0 0 448 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="saveChartAsImage('${chartId}','${chartType}')">
+		        <path d='m500 450c-83 0-150-67-150-150 0-83 67-150 150-150 83 0 150 67 150 150 0 83-67 150-150 150z m400 150h-120c-16 0-34 13-39 29l-31 93c-6 15-23 28-40 28h-340c-16 0-34-13-39-28l-31-94c-6-15-23-28-40-28h-120c-55 0-100-45-100-100v-450c0-55 45-100 100-100h800c55 0 100 45 100 100v450c0 55-45 100-100-450z m-70-850h-640c-6 0-11 5-11 11v420c0 5 5 10 11 10h640c6 0 11-5 11-10v-420c0-6-5-11-11-11z m-300 106h-40c-12 0-21 9-21 21s9 21 21 21h40c12 0 21-9 21-21s-9-21-21-21z m150 0h-40c-12 0-21 9-21 21s9 21 21 21h40c12 0 21-9 21-21s-9-21-21-21z m-150 85h-40c-12 0-21 9-21 21s9 21 21 21h40c12 0 21-9 21-21s-9-21-21-21z m150 0h-40c-12 0-21 9-21 21s9 21 21 21h40c12 0 21-9 21-21s-9-21-21-21z'></path>
+		    </svg>
+		</li>`;
+	li += `<li rel="tooltip" class="modebar-btn" title="Show Data" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+		    <svg viewBox="0 0 448 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="getGridData('','','${chartId}','')">
+		        <path d='M448 32C483.3 32 512 60.65 512 96V416C512 451.3 483.3 480 448 480H64C28.65 480 0 451.3 0 416V96C0 60.65 28.65 32 64 32H448zM152 96H64V160H152V96zM208 160H296V96H208V160zM448 96H360V160H448V96zM64 288H152V224H64V288zM296 224H208V288H296V224zM360 288H448V224H360V288zM152 352H64V416H152V352zM208 416H296V352H208V416zM448 352H360V416H448V352z'></path>
+		    </svg>
+		</li>
+
+		<li rel="tooltip" class="modebar-btn" title="Filter Chart" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+		    <svg viewBox="0 0 448 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="getfilterData('${chartId}','${tableName}','${chartType}')">
+		        <path d='M3.853 54.87C10.47 40.9 24.54 32 40 32H472C487.5 32 501.5 40.9 508.1 54.87C514.8 68.84 512.7 85.37 502.1 97.33L320 320.9V448C320 460.1 313.2 471.2 302.3 476.6C291.5 482 278.5 480.9 268.8 473.6L204.8 425.6C196.7 419.6 192 410.1 192 400V320.9L9.042 97.33C-.745 85.37-2.765 68.84 3.854 54.87L3.853 54.87z'></path>
+		    </svg>
+		</li>`;
+
+		li += `<li rel="tooltip" class="modebar-btn" title="Delete Chart" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+		    <svg viewBox="0 0 448 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="deleteVisualizeChart('${chartId}','${tableName}','${chartType}')">
+		        <path d='M135.2 17.69C140.6 6.848 151.7 0 163.8 0H284.2C296.3 0 307.4 6.848 312.8 17.69L320 32H416C433.7 32 448 46.33 448 64C448 81.67 433.7 96 416 96H32C14.33 96 0 81.67 0 64C0 46.33 14.33 32 32 32H128L135.2 17.69zM31.1 128H416V448C416 483.3 387.3 512 352 512H95.1C60.65 512 31.1 483.3 31.1 448V128zM111.1 208V432C111.1 440.8 119.2 448 127.1 448C136.8 448 143.1 440.8 143.1 432V208C143.1 199.2 136.8 192 127.1 192C119.2 192 111.1 199.2 111.1 208zM207.1 208V432C207.1 440.8 215.2 448 223.1 448C232.8 448 240 440.8 240 432V208C240 199.2 232.8 192 223.1 192C215.2 192 207.1 199.2 207.1 208zM304 208V432C304 440.8 311.2 448 320 448C328.8 448 336 440.8 336 432V208C336 199.2 328.8 192 320 192C311.2 192 304 199.2 304 208z'></path>
+		    </svg>
+		</li>
+
+		<li rel="tooltip" class="modebar-btn" title="Expand Chart" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+		    <svg viewBox="0 0 448 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="expandEChart('${chartId}','${chartType}')">
+		        <path d='M447.1 319.1v135.1c0 13.26-10.75 23.1-23.1 23.1h-135.1c-12.94 0-24.61-7.781-29.56-19.75c-4.906-11.1-2.203-25.72 6.937-34.87l30.06-30.06L224 323.9l-71.43 71.44l30.06 30.06c9.156 9.156 11.91 22.91 6.937 34.87C184.6 472.2 172.9 479.1 160 479.1H24c-13.25 0-23.1-10.74-23.1-23.1v-135.1c0-12.94 7.781-24.61 19.75-29.56C23.72 288.8 27.88 288 32 288c8.312 0 16.5 3.242 22.63 9.367l30.06 30.06l71.44-71.44L84.69 184.6L54.63 214.6c-9.156 9.156-22.91 11.91-34.87 6.937C7.798 216.6 .0013 204.9 .0013 191.1v-135.1c0-13.26 10.75-23.1 23.1-23.1h135.1c12.94 0 24.61 7.781 29.56 19.75C191.2 55.72 191.1 59.87 191.1 63.1c0 8.312-3.237 16.5-9.362 22.63L152.6 116.7l71.44 71.44l71.43-71.44l-30.06-30.06c-9.156-9.156-11.91-22.91-6.937-34.87c4.937-11.95 16.62-19.75 29.56-19.75h135.1c13.26 0 23.1 10.75 23.1 23.1v135.1c0 12.94-7.781 24.61-19.75 29.56c-11.1 4.906-25.72 2.203-34.87-6.937l-30.06-30.06l-71.43 71.43l71.44 71.44l30.06-30.06c9.156-9.156 22.91-11.91 34.87-6.937C440.2 295.4 447.1 307.1 447.1 319.1z'></path>
+		    </svg>
+		</li>`;
+
+
+	li += `<li rel="tooltip" class="modebar-btn" title="Edit Chart" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+    <svg viewBox="0 0 448 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="homePageChartSetting('${chartId}','${chartType}',' ','${chartCOnfigObjStr}','${count}')">
+		<path d='M490.3 40.4C512.2 62.27 512.2 97.73 490.3 119.6L460.3 149.7L362.3 51.72L392.4 21.66C414.3-.2135 449.7-.2135 471.6 21.66L490.3 40.4zM172.4 241.7L339.7 74.34L437.7 172.3L270.3 339.6C264.2 345.8 256.7 350.4 248.4 353.2L159.6 382.8C150.1 385.6 141.5 383.4 135 376.1C128.6 370.5 126.4 361 129.2 352.4L158.8 263.6C161.6 255.3 166.2 247.8 172.4 241.7V241.7zM192 63.1C209.7 63.1 224 78.33 224 95.1C224 113.7 209.7 127.1 192 127.1H96C78.33 127.1 64 142.3 64 159.1V416C64 433.7 78.33 448 96 448H352C369.7 448 384 433.7 384 416V319.1C384 302.3 398.3 287.1 416 287.1C433.7 287.1 448 302.3 448 319.1V416C448 469 405 512 352 512H96C42.98 512 0 469 0 416V159.1C0 106.1 42.98 63.1 96 63.1H192z'></path>"
+		</svg></li>
+
+		<li rel="tooltip" class="modebar-btn" title="Change Colors" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+    <svg viewBox="0 0 448 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="changeEchartColors('${chartId}','${chartType}','${colorsObj}','${chartCOnfigObjStr}','${tempResponse}')">
+		<path d='M512 255.1C512 256.9 511.1 257.8 511.1 258.7C511.6 295.2 478.4 319.1 441.9 319.1H344C317.5 319.1 296 341.5 296 368C296 371.4 296.4 374.7 297 377.9C299.2 388.1 303.5 397.1 307.9 407.8C313.9 421.6 320 435.3 320 449.8C320 481.7 298.4 510.5 266.6 511.8C263.1 511.9 259.5 512 256 512C114.6 512 0 397.4 0 256C0 114.6 114.6 0 256 0C397.4 0 512 114.6 512 256V255.1zM96 255.1C78.33 255.1 64 270.3 64 287.1C64 305.7 78.33 319.1 96 319.1C113.7 319.1 128 305.7 128 287.1C128 270.3 113.7 255.1 96 255.1zM128 191.1C145.7 191.1 160 177.7 160 159.1C160 142.3 145.7 127.1 128 127.1C110.3 127.1 96 142.3 96 159.1C96 177.7 110.3 191.1 128 191.1zM256 63.1C238.3 63.1 224 78.33 224 95.1C224 113.7 238.3 127.1 256 127.1C273.7 127.1 288 113.7 288 95.1C288 78.33 273.7 63.1 256 63.1zM384 191.1C401.7 191.1 416 177.7 416 159.1C416 142.3 401.7 127.1 384 127.1C366.3 127.1 352 142.3 352 159.1C352 177.7 366.3 191.1 384 191.1z'></path>"
+		</svg></li>
+
+		<li rel="tooltip" class="modebar-btn" title="Reset" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+    <svg viewBox="0 0 512 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="getVisualizationchart('${dashBoard}',' ')">
+		<path d='m786 296v-267q0-15-11-26t-25-10h-214v214h-143v-214h-214q-15 0-25 10t-11 26v267q0 1 0 2t0 2l321 264 321-264q1-1 1-4z m124 39l-34-41q-5-5-12-6h-2q-7 0-12 3l-386 322-386-322q-7-4-13-4-7 2-12 7l-35 41q-4 5-3 13t6 12l401 334q18 15 42 15t43-15l136-114v109q0 8 5 13t13 5h107q8 0 13-5t5-13v-227l122-102q5-5 6-12t-4-13z' transform: 'matrix(1 0 0 -1 0 850)></path>"
+		</svg></li>
+		<li id='${chartId}_echartTypes' rel="tooltip" class="modebar-btn" title="Chart Types" style="padding: 4px;border-bottom: 1px solid #ddd;text-align: center;">
+    <svg viewBox="0 0 448 512" class="icon" height="1em" width="1em" style="fill: rgb(11, 74, 153);" onclick="changegraph('${chartId}','${chartType}',' ',' ','${count}','${noOfDataCount}')">
+		<path d='M424.1 287c-15.13-15.12-40.1-4.426-40.1 16.97V352H336L153.6 108.8C147.6 100.8 138.1 96 128 96H32C14.31 96 0 110.3 0 128s14.31 32 32 32h80l182.4 243.2C300.4 411.3 309.9 416 320 416h63.97v47.94c0 21.39 25.86 32.12 40.99 17l79.1-79.98c9.387-9.387 9.387-24.59 0-33.97L424.1 287zM336 160h47.97v48.03c0 21.39 25.87 32.09 40.1 16.97l79.1-79.98c9.387-9.391 9.385-24.59-.0013-33.97l-79.1-79.98c-15.13-15.12-40.99-4.391-40.99 17V96H320c-10.06 0-19.56 4.75-25.59 12.81L254 162.7L293.1 216L336 160zM112 352H32c-17.69 0-32 14.31-32 32s14.31 32 32 32h96c10.06 0 19.56-4.75 25.59-12.81l40.4-53.87L154 296L112 352z'></path>"
+		</svg></li>`;
 
 	$("#" + chartId + "_toolBox ul").html(li);
 }
@@ -18737,7 +18767,7 @@ function applyFilterOnGraph() {
 										+ "<input type='hidden' id='" + chartid + "_pageSize' value='10'/>"
 										+ "<input type='hidden' id='" + chartid + "_TotalChartCount' value='0'/>"
 										+ "<input type='hidden' id='" + chartid + "_options' value=''/>";
-									if (type != null && type != '' && type != undefined && echarts.indexOf(type) > -1) {
+									if (type != null && type != '' && type != undefined && eChartsArrList.indexOf(type) > -1) {
 										chartDivId += "<div id = '" + chartid + "_toolBox' class='iconsDiv' style='position: absolute;top: 2px;right: 3px;height: 99%; background: #f1f1f1;height: 349px;'><ul></ul></div>"
 											+ "<div id='" + chartid + "_radioButtons' class='visionVisualizeRadioButtonsClass'></div>";
 									}
@@ -20390,32 +20420,68 @@ function echartToolBar(chartType) {
 	return feature;
 }
 
-function changegraph(chartId, chartType, layout, data, createcount) {
-
+function changegraph(chartId, chartType, layout, data, createcount,noOfDataCount) {
+	var axisColsLen = parseInt($('#'+chartId + '_dynamic_XAxisLength').val());
+	var valuesColsLen = parseInt($('#'+chartId + '_dynamic_YAxisLength').val());
 	var parrantId = $("#" + chartId).parent().parent().attr('id');
-	var result = "<div id='charttypeId' class ='charttypeId'>"
-		+ "<div id='visionVisualizeBasicTabs' class='visionVisualizeChartsTabsClass'>"
-		+ "<img onclick=\"getDashboard('pie','" + chartId + "','" + chartType + "','" + createcount + "')\" src='images/Pie.svg' class='visualDarkMode' title='Pie chart'>"
-		+ "<img onclick=\"getDashboard('bar','" + chartId + "','" + chartType + "','" + createcount + "')\" src='images/Bar.svg' class='visualDarkMode' title='Bar chart'>"
-		+ "<img onclick=\"getDashboard('donut','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Donut.svg' class='visualDarkMode' title='Donut chart'>"
-		+ "<img onclick=\"getDashboard('column','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Column.svg' class='visualDarkMode' title='Column chart'>"
-		+ "<img onclick=\"getDashboard('lines','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Line.svg' class='visualDarkMode' title='Line chart'>"
-		+ "<img onclick=\"getDashboard('scatter','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Scatter.svg' class='visualDarkMode' title='Scatter chart'>"
-		+ "<img onclick=\"getDashboard('scatterpolar','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Redar-Chart.svg' class='visualDarkMode' title='Radar chart'>"
-		+ "<img onclick=\"getDashboard( 'funnel','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Funnel.svg' class='visualDarkMode' title='Funnel chart'>"
-		+ "</div>";
+	var result = "<div id='charttypeId' class ='charttypeId'><div id='visionVisualizeBasicTabs' class='visionVisualizeChartsTabsClass'>";
+    	if(axisColsLen == 1 && valuesColsLen >= 2 ){
+    		result+="<img onclick=\"getDashboard('bar','" + chartId + "','" + chartType + "','" + createcount + "')\" src='images/Bar.svg' class='visualDarkMode' title='Bar chart'>"
+    		+ "<img onclick=\"getDashboard('column','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Column.svg' class='visualDarkMode' title='Column chart'>"
+    		+ "<img onclick=\"getDashboard('lines','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Line.svg' class='visualDarkMode' title='Line chart'>"
+			+ "<img onclick=\"getDashboard('scatter','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Scatter.svg' class='visualDarkMode' title='Scatter chart'>"
+    		+ "<img onclick=\"getDashboard('scatterpolar','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Redar-Chart.svg' class='visualDarkMode' title='Radar chart'>"
+    		+ "<img onclick=\"getDashboard( 'funnel','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Funnel.svg' class='visualDarkMode' title='Funnel chart'>"
+			+ "<img onclick=\"getDashboard( 'candlestick','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Candlestick.svg' class='visualDarkMode' title='Candlestick chart'>"
+			+ "<img onclick=\"getDashboard( 'waterfall','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Waterfall.svg' class='visualDarkMode' title='Waterfall chart'>"
+    		+ "<img onclick=\"getDashboard( 'StackedAreaChart','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/StackedAreaChart.png' class='visualDarkMode' title='Stacked Area chart'>"
+    		+ "<img onclick=\"getDashboard( 'GradStackAreaChart','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/GradientStackedAreaChart.png' class='visualDarkMode' title='Gradient Stacked Area chart'>"
+
+    	}
+    	if(axisColsLen == 1 && valuesColsLen ==1 ){
+    	result+="<img onclick=\"getDashboard('pie','" + chartId + "','" + chartType + "','" + createcount + "')\" src='images/Pie.svg' class='visualDarkMode' title='Pie chart'>"
+    		+ "<img onclick=\"getDashboard('bar','" + chartId + "','" + chartType + "','" + createcount + "')\" src='images/Bar.svg' class='visualDarkMode' title='Bar chart'>"
+    		+ "<img onclick=\"getDashboard('donut','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Donut.svg' class='visualDarkMode' title='Donut chart'>"
+    		+ "<img onclick=\"getDashboard('column','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Column.svg' class='visualDarkMode' title='Column chart'>"
+    		+ "<img onclick=\"getDashboard('lines','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Line.svg' class='visualDarkMode' title='Line chart'>"
+    		+ "<img onclick=\"getDashboard('scatter','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Scatter.svg' class='visualDarkMode' title='Scatter chart'>"
+    		+ "<img onclick=\"getDashboard('scatterpolar','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Redar-Chart.svg' class='visualDarkMode' title='Radar chart'>"
+    		+ "<img onclick=\"getDashboard( 'funnel','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Funnel.svg' class='visualDarkMode' title='Funnel chart'>"
+			+ "<img onclick=\"getDashboard( 'candlestick','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Candlestick.svg' class='visualDarkMode' title='Candlestick chart'>"
+			+ "<img onclick=\"getDashboard( 'waterfall','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Waterfall.svg' class='visualDarkMode' title='Waterfall chart'>"
+    		+ "<img onclick=\"getDashboard( 'BasicAreaChart','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/BasicAreaChart.png' class='visualDarkMode' title='Basic Area chart'>"
+    		+ "<img onclick=\"getDashboard( 'AreaPiecesChart','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/AreaPiecesChart.png' class='visualDarkMode' title='Funnel chart'>"
+    		+ "</div>";
+
+		}
+		if(axisColsLen >= 2 && valuesColsLen ==1 ){
+		result+="<img onclick=\"getDashboard('treemap','" + chartId + "','" + chartType + "','" + createcount + "')\" src='images/Tree_Chart.svg' class='visualDarkMode' title='Tree Map'>"
+    		+ "<img onclick=\"getDashboard('sunburst','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/Sunburst_Inner_Icon.svg' class='visualDarkMode' title='Sunburst'>"
+    		+ "<img onclick=\"getDashboard('sankey','" + chartId + "','" + chartType + "','" + createcount + "')\"  src='images/sankey_chart.png' class='visualDarkMode' title='Sankey'>";
+		}
+		if(axisColsLen == 2 && valuesColsLen ==1 ){
+			result+= "<img onclick=\"getDashboard('heatMap','" + chartId + "','" + chartType + "','" + createcount + "')\" src='images/HeatMap_Inner_Icon.svg' class='visualDarkMode' title='Heat Map'>";
+		}
 	result += "</div>";
+
+
 	$("#dxpColorPopOver").remove();
 	$("#dxpCreatePopOver").html("<div id='dxpColorPopOver'></div>");
 	$("#dxpColorPopOver").html(result);
 	$("#dxpColorPopOver").jqxPopover('open');
-	var selector = $("#" + chartId).find('.modebar-btn').find($("a[data-title='Chart Types']"));
-	var select = $(selector['prevObject'][6]);
+    var selector,select;
+	if (chartType != null && chartType != '' && chartType != undefined && eChartsArrList.indexOf(chartType) > -1){
+		 select = $("#" + chartId+"_toolBox").find($("li[title='Chart Types']"));
+	}
+	else{
+	 selector = $("#" + chartId).find('.modebar-btn').find($("a[data-title='Chart Types']"));
+	 select = $(selector['prevObject'][9]);
+	}
 	$("#dxpColorPopOver").jqxPopover({
 		offset: { left: 0, top: 0 },
 		position: 'left',
 		width: 150,
-		height: 100,
+		height: 'auto',
 		title: "graph Types",
 		showCloseButton: true,
 		selector: select
@@ -20463,7 +20529,30 @@ function getDashboard(newcharttype, chartid, currenttype, createCount) {
 						var labelLegend = dataarr[i]['labelLegend'];
 						var colorsObj = dataarr[i]['colorsObj'];
 						var FilterColumn = dataarr[i]['FilterColumn'];
+
 						if (chartPropObj != null && chartPropObj != undefined) {
+								if(plotlyCharts.indexOf(currenttype)!= -1 && eChartsArrList.indexOf(newcharttype) != -1){
+									configobj=convertChartPropertiesPlotyToEchart(newcharttype, currenttype, JSON.parse(chartConfigObj),colorsObj);
+									var propobj = JSON.parse(chartPropObj);
+							Object.keys(propobj).forEach(function(key) {
+								var value = propobj[key];
+								var key = key.replace(type.toUpperCase(), newchartType);
+								chartpoprobj[key] = value;
+							});
+								}
+								else{
+								if(plotlyCharts.indexOf(newcharttype) != -1 && eChartsArrList.indexOf(currenttype)!= -1){
+									chartpoprobj=convertChartPropertiesEchartToPloty(newcharttype, currenttype,JSON.parse(chartConfigObj));
+									var chartConfigobj = JSON.parse(chartConfigObj);
+									Object.keys(chartConfigobj).forEach(function(key) {
+										var value = chartConfigobj[key];
+										var key = key.replace(type.toUpperCase(), newchartType);
+										configobj[key] = value;
+									});
+								}
+
+
+								else{
 							var propobj = JSON.parse(chartPropObj);
 							Object.keys(propobj).forEach(function(key) {
 								var value = propobj[key];
@@ -20481,17 +20570,20 @@ function getDashboard(newcharttype, chartid, currenttype, createCount) {
 								configobj[newcharttype.toUpperCase() + "LABELPOSITION"] = "inside";
 								chartpoprobj[newcharttype.toUpperCase() + "LABELPOSITION"] = "data";
 							}
+						}
+					}
 							if (chartpoprobj != null && !jQuery.isEmptyObject(chartpoprobj)) {
 								chartPropObj = JSON.stringify(chartpoprobj);
 								chartConfigObj = JSON.stringify(configobj);
 							}
-							var chartFilterParams = filterCondition;
+							var chartFilterParams=filterCondition;
 							var homepageFilterParamsObj = getHomepageFilterParamsArr(chartFilterParams, id);
-							var mainFilterConditionsObj = homepageFilterParamsObj['mainFilterConditions'];
-							if (!isNullOrUndefined(mainFilterConditionsObj) && !jQuery.isEmptyObject(mainFilterConditionsObj)) {
-								filterColumns = JSON.stringify(mainFilterConditionsObj);
-							}
-							var message = 'Do u want to save';
+								var mainFilterConditionsObj = homepageFilterParamsObj['mainFilterConditions'];
+								if (!isNullOrUndefined(mainFilterConditionsObj) && !jQuery.isEmptyObject(mainFilterConditionsObj)) {
+									filterColumns=JSON.stringify(mainFilterConditionsObj);
+								}
+
+							var message = 'Do u want to save or Apply';
 							var modalObj = {
 								title: labelObject["Message"] != null ? labelObject["Message"] : "Message",
 								body: "<div class='isPopupDefaultSaveClass'>" + message + "</div>",
@@ -20500,7 +20592,7 @@ function getDashboard(newcharttype, chartid, currenttype, createCount) {
 								{
 									text: labelObject['Save'] != null ? labelObject['Save'] : 'Save',
 									click: function() {
-										//                                        $(".isPopupDefaultSaveClass").val(""); 
+										//                                        $(".isPopupDefaultSaveClass").val("");
 										updategraphtypes(chartConfigObj, chartPropObj, chartid, newcharttype);
 										getVisualizeChart(chartid, newcharttype, XAxix, yAxix, table, aggColumnName, filterCondition, chartConfigObj, chartPropObj, count, labelLegend, colorsObj);
 										count++;
@@ -20508,13 +20600,6 @@ function getDashboard(newcharttype, chartid, currenttype, createCount) {
 									},
 									isCloseButton: true
 								},
-								{
-									text: labelObject['Cancel'] != null ? labelObject['Cancel'] : 'Cancel',
-									click: function() {
-
-									},
-									isCloseButton: true
-								}
 								/*{
 									text: labelObject['Apply'] != null ? labelObject['Apply'] : 'Apply',
 									click: function() {
@@ -20543,7 +20628,6 @@ function getDashboard(newcharttype, chartid, currenttype, createCount) {
 	});
 
 }
-
 function getEchartDashBoard(newchartType, chartId, currenttype, createCount) {
 	var chartIds = [];
 	chartIds.push(chartId);
@@ -24858,7 +24942,7 @@ function viewAnalyticsTableDataGrid(data) {
 function getSankeyChart(chartId, result, count, chartType, saveType) {
     chartType = 'sankey';
     var chartUpper = chartType.toUpperCase();
-    var chartTitle = $("#" + chartUpper + "TITLEECHARTS").val();
+    var chartTitle = $("#" + chartUpper + "TITLEECHARTS").val() ;
     $("#visionVisualizeChartId" + count).remove();
     var sankeyChartId = "visionVisualizeChart" + count;
     var sankeyChartHomeId = "visionVisualizeChartHome" + count;
@@ -24895,12 +24979,12 @@ function getSankeyChart(chartId, result, count, chartType, saveType) {
         hoverlabeldata = chartEditoptions['SANKEYLABELDATA'] || $('#SANKEYLABELDATA' + count).val();
         linkColors = JSON.parse(result['colors'])['clrs'];
     } else {
-        chartTitle = $('#SANKEYCHARTTITLE' + count).val();
+        chartTitle = $('#SANKEYCHARTTITLE' + count).val() || result['chartTitle'];
         lineOpacity = $('#SANKEYLINEOPACITY').val();
         curvenesss = $('#SANKEYCURVENESS' + count).val();
         labelPosition = $('#SANKEYLABELPOSITION' + count).val();
         labelData = $('#SANKEYLABELDATA' + count).val();
-        hoverlabeldata = $('#SANKEYHOVERLABELDATA' + count).val();
+        hoverlabeldata = $('#SANKEYHOVERLABELDATA' + count).val() || 'x+y';
         linkColors = JSON.parse(result['colors'])['clrs'];
 
     }
@@ -24935,7 +25019,7 @@ function getSankeyChart(chartId, result, count, chartType, saveType) {
                 if (hoverlabeldata == 'y')
                     return params.name;
                 if (hoverlabeldata == 'x+y')
-                    return params.name + ":" + params.value;
+                    return params.name + " -> " + params.value;
 
                 //return params.name;
             }
@@ -24958,7 +25042,7 @@ function getSankeyChart(chartId, result, count, chartType, saveType) {
                     if (labelData == 'y')
                         return params.value;
                     if (labelData == 'x+y')
-                        return params.name + ":" + params.value;
+                        return params.name + " -> " + params.value;
 
                     //return params.name;
                 }
@@ -27677,7 +27761,7 @@ function uploadIntelliSenseSmartBISelectedFileXlsx(jsonData, fileType, fileName,
 	var url;
 	const myArray = fileName.split(".");
 	let tableName = myArray[0];
-	tableName = tableName.replace(" ", "_");
+	tableName = tableName.replace(/[^a-zA-Z0-9_]/g, "_").replace(/_+/g, "_");
 	$.ajax({
 		type: "post",
 		traditional: true,
@@ -29697,7 +29781,7 @@ function showIntelliSenseAutoSuggestions(divId) {
 		title: (labelObject['Co-pilot Mode'] != null ? labelObject['Co-pilot Mode'] : 'Co-pilot Mode'),
 		modal: true,
 		width: 500,
-		height: 600,
+		height: 500,
 		fluid: true,
 		overflow: 'hidden',
 		buttons: [],
@@ -30793,6 +30877,7 @@ function showIntelliSenseViewNewChartDiv(chartImage, chartType, replyId) {
 	if (!(chartType != null && chartType != '' && chartType != undefined)) {
 		chartType = chartType1;
 	}
+	chartType1 = chartType;
 	var chartDiv = "<div id='intellisenseViewNewchartid' class=\"visualIconDivImg text-right replyIntelisenseView convai-right-message p-3 nonLoadedBubble\">"
 		+ "<img src=\"images/" + chartImage + "\" class=\"visualDarkMode\">"
 		+ "<input type='hidden' id='intelliSenseChartTypeId' value='" + chartType + "'/>"
@@ -32150,7 +32235,6 @@ function getMergeJoinCondColumns(replyId) {
     }
 }
 function getMergeTableJoinType(linksObj, tablesObj, linksTables, replyId) {
-
     var table = "<table id='userMergeJoinTypesTableId' border='1'>"
     $.each(tablesObj, function(i, val) {
         table += "<tr><td><input type='text' value='" + val + "'/></td></tr>";
@@ -32180,30 +32264,30 @@ function getMergeTableJoinType(linksObj, tablesObj, linksTables, replyId) {
         scrollAreaToBottom();
     }
 }
-function getMergeTableJoinType(linksObj, tablesObj, linksTables, replyId) {
-
-	var table = "<table id='userMergeJoinTypesTableId' border='1'>"
-	$.each(tablesObj, function(i, val) {
-		table += "<tr><td><input type='text' value='" + val + "'/></td></tr>";
-		var selectBox = "<select id='mergeTablesSelectBoxId" + i + "'>"
-			+ "<option value='SELECT'>Select</option>"
-			+ "<option value='INNER JOIN'>INNER JOIN</option>"
-			+ "<option value='LEFT OUTER JOIN'>LEFT OUTER JOIN</option>"
-			+ "<option value='RIGHT OUTER JOIN'>RIGHT OUTER JOIN</option>"
-			+ "<option value='FULL OUTER JOIN'>FULL OUTER JOIN</option>";
-		if (i < Object.keys(tablesObj).length - 1) {
-			table += "<tr><td>" + selectBox + "</td></tr>";
-		}
-	});
-	table += "</table>";
-	table += "<div class='convAIUserJoinTypes'><button onclick='getConversationalAIJoinQuery(" + JSON.stringify(linksObj) + "," + replyId + ")'>Next</button></div>";
-	$("#userMergeTablesJoinTypesId").remove();
-	var mainDiv = "<div id='userMergeTablesJoinTypesId' class='visionConversationalAIClass convai-left-message nonLoadedBubble'>Please Select Join Types<br>" +
-		table + "</div>";
-	$("#visionChartsAutoSuggestionUserId").append(mainDiv);
-	showAnimatedBubbleSequnce();
-	scrollAreaToBottom();
-}
+//function getMergeTableJoinType(linksObj, tablesObj, linksTables, replyId) {
+//
+//	var table = "<table id='userMergeJoinTypesTableId' border='1'>"
+//	$.each(tablesObj, function(i, val) {
+//		table += "<tr><td><input type='text' value='" + val + "'/></td></tr>";
+//		var selectBox = "<select id='mergeTablesSelectBoxId" + i + "'>"
+//			+ "<option value='SELECT'>Select</option>"
+//			+ "<option value='INNER JOIN'>INNER JOIN</option>"
+//			+ "<option value='LEFT OUTER JOIN'>LEFT OUTER JOIN</option>"
+//			+ "<option value='RIGHT OUTER JOIN'>RIGHT OUTER JOIN</option>"
+//			+ "<option value='FULL OUTER JOIN'>FULL OUTER JOIN</option>";
+//		if (i < Object.keys(tablesObj).length - 1) {
+//			table += "<tr><td>" + selectBox + "</td></tr>";
+//		}
+//	});
+//	table += "</table>";
+//	table += "<div class='convAIUserJoinTypes'><button onclick='getConversationalAIJoinQuery(" + JSON.stringify(linksObj) + "," + replyId + ")'>Next</button></div>";
+//	$("#userMergeTablesJoinTypesId").remove();
+//	var mainDiv = "<div id='userMergeTablesJoinTypesId' class='visionConversationalAIClass convai-left-message nonLoadedBubble'>Please Select Join Types<br>" +
+//		table + "</div>";
+//	$("#visionChartsAutoSuggestionUserId").append(mainDiv);
+//	showAnimatedBubbleSequnce();
+//	scrollAreaToBottom();
+//}
 
 function getConversationalAIJoinQuery(linksObj, replyId) {
 
@@ -34323,20 +34407,20 @@ function getStackedAreaChart(chartId, response, count, chartType) {
 	hoverTextSize = (hoverTextSize != undefined && hoverTextSize != '' && hoverTextSize != null) ? parseInt(hoverTextSize) : 10;
 	symbolSize = (symbolSize != undefined && symbolSize != '' && symbolSize != null) ? parseInt(symbolSize) : 10;
 
-	var markerColor = colorsArr;
+	var markerColor = colorsArr['clrs'];
 	markerColor = markerColor.reverse();
 	var markerSize = $('#' + bigChartType + 'MARKERSIZE' + count).val();
 	markerSize = (markerSize != undefined && markerSize != '' && markerSize != null) ? parseInt(markerSize) : 10;
 
 
 
-	var areaColorArr = colorsArr;
+	var areaColorArr = colorsArr['clrs'];
 	areaColorArr = areaColorArr.reverse();
 	var areaopacity = $('#' + bigChartType + 'OPACITY' + count).val();
 	areaopacity = (areaopacity != undefined && areaopacity != '' && areaopacity != null) ? areaopacity : "0.8";
 
 
-	var linecolor = colorsArr;
+	var linecolor = colorsArr['clrs'];
 	linecolor = linecolor.reverse();
 	var lineWidth = $('#' + bigChartType + 'LINEWIDTH').val();
 	lineWidth = (lineWidth != undefined && lineWidth != '' && lineWidth != null) ? parseInt(lineWidth) : 10;
@@ -34598,20 +34682,20 @@ function getGradientStackedAreaChart(chartId, response, count, chartType) {
 	hoverTextSize = (hoverTextSize != undefined && hoverTextSize != '' && hoverTextSize != null) ? parseInt(hoverTextSize) : 10;
 	symbolSize = (symbolSize != undefined && symbolSize != '' && symbolSize != null) ? parseInt(symbolSize) : 10;
 
-	var markerColor = colorsArr;
+	var markerColor = colorsArr['clrs'];
 	markerColor = markerColor.reverse();
 	var markerSize = $('#' + bigChartType + 'MARKERSIZE' + count).val();
 	markerSize = (markerSize != undefined && markerSize != '' && markerSize != null) ? parseInt(markerSize) : 10;
 
 
 
-	var areaColorArr = colorsArr;
+	var areaColorArr = colorsArr['clrs'];
 	areaColorArr = areaColorArr.reverse();
 	var areaopacity = $('#' + bigChartType + 'OPACITY' + count).val();
 	areaopacity = (areaopacity != undefined && areaopacity != '' && areaopacity != null) ? areaopacity : "0.8";
 
 
-	var linecolor = colorsArr;
+	var linecolor = colorsArr['clrs'];
 	//linecolor=linecolor.reverse();
 
 	var lineWidth = $('#' + bigChartType + 'LINEWIDTH').val();
@@ -35302,7 +35386,7 @@ function getChartPropertiesEchart(bigChartType, count) {
 		}
 
 		if (property === 'MARKERSIZE' || property === 'LINEWIDTH') {
-			value = (value !== undefined && value !== '' && value !== null) ? value : "10";
+			value = (value !== undefined && value !== '' && value !== null) ? value : "5";
 		}
 
 		if (property === 'OPACITY') {
@@ -35322,6 +35406,7 @@ function getBasicAreaChartTypeFromDashBoard(
 	count,
 	chartType
 ) {
+    count = $('#'+chartId+'_count').val();
 	$('#' + chartId).remove();
 	var basicAreaChartId = "homeChartParentDiv" + count;
 	var basicAreaChartHomeId = "homeChartParentDiv" + count;
@@ -35413,13 +35498,13 @@ function getBasicAreaChartTypeFromDashBoard(
 	var hoverTextFont =
 		chartCOnfigObjStr[bigChartType + "HOVERFONTCOLOR"] || "Arial, sans-serif";
 
-	var markerColor = chartCOnfigObjStr[bigChartType + "COLORSMARKER"] || colorsArr;
+	var markerColor = colorsArr;//chartCOnfigObjStr[bigChartType + "COLORSMARKER"] || colorsArr;
 	var markerSize = chartCOnfigObjStr[bigChartType + "MARKERSIZE"] || "10";
-	var areaColor = chartCOnfigObjStr[bigChartType + "COLORSAREA"] || colorsArr;
+	var areaColor =colorsArr;// chartCOnfigObjStr[bigChartType + "COLORSAREA"] || colorsArr;
 	var areaopacity = chartCOnfigObjStr[bigChartType + "OPACITY"] || "0.8";
 
-	var linecolor = chartCOnfigObjStr[bigChartType + "LINECOLORS"] || colorsArr;
-	var lineWidth = chartCOnfigObjStr[bigChartType + "LINEWIDTH"] || "10";
+	var linecolor = colorsArr;//chartCOnfigObjStr[bigChartType + "LINECOLORS"] || colorsArr;
+	var lineWidth = chartCOnfigObjStr[bigChartType + "LINEWIDTH"] || "5";
 
 	var linetype = chartCOnfigObjStr[bigChartType + "LINEDASH"];
 
@@ -35451,7 +35536,7 @@ function getBasicAreaChartTypeFromDashBoard(
 					type: linetype, // Line type: 'solid', 'dashed', 'dotted', etc.
 				},
 				areaStyle: {
-					color: areaColor || colorsArr[0],
+					color: areaColor[0] || colorsArr[0],
 					opacity: areaopacity, // Area opacity
 				},
 				itemStyle: {
@@ -35581,7 +35666,7 @@ function getStackedAreaChartFromDashBoard(chartId, response, count, chartType) {
 	var colorsObj = response['colorsObj'];
 	var colorsArr = [];
 	if (colorsObj != undefined && colorsObj != null && colorsObj != '') {
-		colorsArr = JSON.parse(colorsObj);
+		colorsArr = JSON.parse(colorsObj)['clrs'];
 	}
 	else {
 		colorsArr = ['#1864ab', '#fd7e14', '#0b7285', '#ff6b6b'];
@@ -35628,17 +35713,17 @@ function getStackedAreaChartFromDashBoard(chartId, response, count, chartType) {
 	var hoverTextFont =
 		chartCOnfigObjStr[bigChartType + "HOVERFONTCOLOR"] || "Arial, sans-serif";
 
-	var markerColorArr =
-		chartCOnfigObjStr[bigChartType + "COLORSMARKER"].split(",") || colorsArr;
+	var markerColorArr =colorsArr;
+		//chartCOnfigObjStr[bigChartType + "COLORSMARKER"].split(",") || colorsArr;
 	markerColorArr = markerColorArr.reverse();
 	var markerSize = chartCOnfigObjStr[bigChartType + "MARKERSIZE"] || "10";
-	var areaColorArr = chartCOnfigObjStr[bigChartType + "COLORSAREA"].split(",") || colorsArr;
-	areaColorArr = areaColorArr.reverse();
+	var areaColorArr = colorsArr;//chartCOnfigObjStr[bigChartType + "COLORSAREA"].split(",") || colorsArr;
+	//areaColorArr = areaColorArr.reverse();
 	var areaopacity = chartCOnfigObjStr[bigChartType + "OPACITY"] || "0.8";
 
-	var linecolorArr = chartCOnfigObjStr[bigChartType + "LINECOLORS"].split(",") || colorsArr;
+	var linecolorArr =colorsArr;// chartCOnfigObjStr[bigChartType + "LINECOLORS"].split(",") || colorsArr;
 	linecolorArr = linecolorArr.reverse();
-	var lineWidth = chartCOnfigObjStr[bigChartType + "LINEWIDTH"] || "10";
+	var lineWidth = chartCOnfigObjStr[bigChartType + "LINEWIDTH"] || "5";
 
 	var linetype = chartCOnfigObjStr[bigChartType + "LINEDASH"];
 
@@ -35872,7 +35957,7 @@ function getGradientStackedAreaChartFromDashBoard(
 	var colorsObj = response['colorsObj'];
 	var colorsArr = [];
 	if (colorsObj != undefined && colorsObj != null && colorsObj != '') {
-		colorsArr = JSON.parse(colorsObj);
+		colorsArr = JSON.parse(colorsObj)['clrs'];
 	}
 	else {
 		colorsArr = ['#1864ab', '#fd7e14', '#0b7285', '#ff6b6b'];
@@ -35917,17 +36002,17 @@ function getGradientStackedAreaChartFromDashBoard(
 	var hoverTextFont =
 		chartCOnfigObjStr[bigChartType + "HOVERFONTCOLOR"] || "Arial, sans-serif";
 
-	var markerColorArr =
-		chartCOnfigObjStr[bigChartType + "COLORSMARKER"].split(",") || colorsArr;
-	markerColorArr = markerColorArr.reverse();
+	var markerColorArr =colorsArr;
+		//chartCOnfigObjStr[bigChartType + "COLORSMARKER"].split(",") || colorsArr;
+	//markerColorArr = markerColorArr.reverse();
 	var markerSize = chartCOnfigObjStr[bigChartType + "MARKERSIZE"] || "10";
-	var areaColorArr = chartCOnfigObjStr[bigChartType + "COLORSAREA"].split(",") || colorsArr;
-	areaColorArr = areaColorArr.reverse();
+	var areaColorArr = colorsArr;//chartCOnfigObjStr[bigChartType + "COLORSAREA"].split(",") || colorsArr;
+	//areaColorArr = areaColorArr.reverse();
 	var areaopacity = chartCOnfigObjStr[bigChartType + "OPACITY"] || "0.8";
 
-	var linecolorArr = chartCOnfigObjStr[bigChartType + "LINECOLORS"].split(",") || colorsArr;
-	linecolorArr = linecolorArr.reverse();
-	var lineWidth = chartCOnfigObjStr[bigChartType + "LINEWIDTH"] || "10";
+	var linecolorArr =colorsArr;// chartCOnfigObjStr[bigChartType + "LINECOLORS"].split(",") || colorsArr;
+	//linecolorArr = linecolorArr.reverse();
+	var lineWidth = chartCOnfigObjStr[bigChartType + "LINEWIDTH"] || "5";
 
 	var linetype = chartCOnfigObjStr[bigChartType + "LINEDASH"];
 	var isSmooth = false;
@@ -35973,11 +36058,11 @@ function getGradientStackedAreaChartFromDashBoard(
 				color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
 					{
 						offset: 0,
-						color: color[i % color.length] || colorsArr[i % colorsArr.length],
+						color:  colorsArr[i % colorsArr.length],
 					},
 					{
 						offset: 1,
-						color: color[(i + 1) % color.length] || colorsArr[(i + 1) % colorsArr.length],
+						color:  colorsArr[(i + 1) % colorsArr.length],
 					},
 				]),
 			},
@@ -36154,7 +36239,7 @@ function getAreaPiecesChartFromDashBoard(chartId, response, count, chartType) {
 	var colorsObj = response['colorsObj'];
 	var colorsArr = [];
 	if (colorsObj != undefined && colorsObj != null && colorsObj != '') {
-		colorsArr = JSON.parse(colorsObj);
+		colorsArr = JSON.parse(colorsObj)['clrs'];
 	}
 	else {
 		colorsArr = ['#1864ab', '#fd7e14', '#0b7285', '#ff6b6b'];
@@ -36213,16 +36298,16 @@ function getAreaPiecesChartFromDashBoard(chartId, response, count, chartType) {
 	var hoverTextFont =
 		chartCOnfigObjStr[bigChartType + "HOVERFONTCOLOR"] || "Arial, sans-serif";
 
-	var markerColor = chartCOnfigObjStr[bigChartType + "COLORSMARKER"].split(",") || colorsArr;
-	markerColor = markerColor.reverse();
+	var markerColor =  colorsArr;
+	//markerColor = markerColor.reverse();
 	var markerSize = chartCOnfigObjStr[bigChartType + "MARKERSIZE"] || "10";
-	var areaColor = chartCOnfigObjStr[bigChartType + "COLORSAREA"].split(",") || colorsArr;
-	areaColor = areaColor.reverse();
+	var areaColor = colorsArr;//chartCOnfigObjStr[bigChartType + "COLORSAREA"].split(",") ||
+	//areaColor = areaColor.reverse();
 	var areaopacity = chartCOnfigObjStr[bigChartType + "OPACITY"] || "0.8";
 
-	var linecolor = chartCOnfigObjStr[bigChartType + "LINECOLORS"].split(",") || colorsArr;
-	linecolor = linecolor.reverse();
-	var lineWidth = chartCOnfigObjStr[bigChartType + "LINEWIDTH"] || "10";
+	var linecolor = colorsArr;//chartCOnfigObjStr[bigChartType + "LINECOLORS"].split(",") ||
+	//linecolor = linecolor.reverse();
+	var lineWidth = chartCOnfigObjStr[bigChartType + "LINEWIDTH"] || "5";
 
 	var linetype = chartCOnfigObjStr[bigChartType + "LINEDASH"];
 
@@ -36650,10 +36735,11 @@ function saveEchartColors(event, chartId, chartType) {
 	}
 	var colorarr;
 	if (chartId != null && chartId != '' && chartId != 'null' && chartId != undefined) {
+	var dom = document.getElementById(chartId);
+    var myChart = echarts.init(dom);
+    var existingOptions = myChart.getOption();
 		if (['StackedAreaChart', 'GradStackAreaChart', 'BasicAreaChart', 'AreaPiecesChart'].includes(chartType)) {
-			var dom = document.getElementById(chartId);
-			var myChart = echarts.init(dom);
-			var existingOptions = myChart.getOption();
+
 			for (var i = 0; i < existingOptions.series.length; i++) {
 				colorarr.push(colorobj[i % colorobj.length].dataset['color']);
 				existingOptions.series[i].areaStyle = {
@@ -36664,6 +36750,88 @@ function saveEchartColors(event, chartId, chartType) {
 
 			myChart.setOption(existingOptions);
 		}
+		if (['BarAndLine'].includes(chartType)) {
+
+        				for (var i = 0; i < existingOptions.series.length; i++) {
+        					colorarr.push(colorobj[i % colorobj.length].dataset['color']);
+        					existingOptions.series[i].itemStyle = {
+        						color: colorobj[i % colorobj.length].dataset['color']
+        					};
+        				}
+        				myChart.setOption(existingOptions);
+
+        			}
+        			if (['sankey', 'sunburst'].includes(chartType)) {
+
+        				for (var i = 0; i < existingOptions.series.length; i++) {
+        					for (var j = 0; j < existingOptions.series[i].levels.length; j++) {
+        						colorarr.push(colorobj[j % colorobj.length].dataset['color']);
+        						existingOptions.series[i].levels[j].itemStyle = {
+        							color: colorobj[j % colorobj.length].dataset['color']
+        						};
+        						existingOptions.series[i].levels[j].lineStyle = {
+        							color: colorobj[j % colorobj.length].dataset['color'],
+        							opacity: 0.8
+        						};
+        					}
+        				}
+        				existingOptions.color = colorarr;
+        				myChart.setOption(existingOptions);
+
+        			}
+        			if (['heatMap'].includes(chartType)) {
+
+        				var colors = colorobj[0 % colorobj.length].dataset['color'];
+        				var baseHexColor = colors;
+        				colorarr.push(colors);
+
+        				var r = parseInt(baseHexColor.slice(1, 3), 16);
+        				var g = parseInt(baseHexColor.slice(3, 5), 16);
+        				var b = parseInt(baseHexColor.slice(5, 7), 16);
+        				var gradientColors = [`rgba(${r}, ${g}, ${b}, 0)`, // Start color
+        				`rgba(${r}, ${g}, ${b}, 1)`// End color
+        				];
+        				existingOptions.visualMap[0].inRange = {
+        					color: gradientColors
+
+        				};
+        				existingOptions.visualMap[0].controller.inRange = {
+        					color: gradientColors
+        				};
+        				existingOptions.visualMap[0].target.inRange = {
+        					color: gradientColors
+        				};
+        				myChart.setOption(existingOptions);
+
+        			}
+        			if (['treemap'].includes(chartType)) {
+
+        				var colors = colorobj[0 % colorobj.length].dataset['color'];
+        				for (var i = 0; i < existingOptions.series.length; i++) {
+        					for (var j = 0; j < existingOptions.series[i].data.length; j++) {
+        					colorarr.push(colorobj[j % colorobj.length].dataset['color']);
+        					existingOptions.series[i].data[j].itemStyle = {
+        							color: colorobj[j % colorobj.length].dataset['color'],
+        						};
+
+        					}
+
+        				}
+        				myChart.setOption(existingOptions);
+
+        			}
+        			if (['boxplot'].includes(chartType)) {
+
+        				var colors = colorobj[0 % colorobj.length].dataset['color'];
+        				colorarr.push(colors);
+        				for (var i = 0; i < existingOptions.series.length; i++) {
+        					existingOptions.series[i].itemStyle = {
+        						color: colors,
+        					};
+        				}
+        				myChart.setOption(existingOptions);
+
+        			}
 		if (chartType === 'ganttChart') {
 			var ganttchartData = $("#" + chartId).attr("echartData");
 			var options = $("#" + chartId).attr("echartOption");

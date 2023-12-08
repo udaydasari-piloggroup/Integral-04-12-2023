@@ -79,6 +79,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.Alias;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectItem;
 import oracle.sql.RAW;
 
 import org.apache.commons.io.FileUtils;
@@ -7612,6 +7619,7 @@ public class DashBoardsDAO {
 			String selectedvalue = request.getParameter("selectedValue");
 			String Slicecolumn = request.getParameter("SliceColumn");
 			String dragtableName = request.getParameter("dragtableName");
+			String whereCondition = request.getParameter("whereCondition");
 			JSONArray axisColsArr = new JSONArray();
 			JSONArray valuesColsArr = new JSONArray();
 			JSONArray filterColsArr = new JSONArray();
@@ -7691,6 +7699,9 @@ public class DashBoardsDAO {
 						}
 					}
 				}
+			}
+			if(whereCondition != null && !"".equalsIgnoreCase(whereCondition) && !"null".equalsIgnoreCase(whereCondition)){
+				whereCondQuery += whereCondition;
 			}
 			if (JoinQuery != null && !"".equalsIgnoreCase(JoinQuery) && Slicecolumn != null
 					&& !"".equalsIgnoreCase(Slicecolumn)) {
@@ -9693,6 +9704,7 @@ public class DashBoardsDAO {
 			String Slicecolumn = request.getParameter("SliceColumn");
 			String dragtableName = request.getParameter("dragtableName");
 			String radioButtons = request.getParameter("radioButtons");
+			String whereCondition = request.getParameter("whereCondition");
 			JSONArray axisColsArr = new JSONArray();
 			JSONArray valuesColsArr = new JSONArray();
 			JSONArray filterColsArr = new JSONArray();
@@ -9777,6 +9789,9 @@ public class DashBoardsDAO {
 						}
 					}
 				}
+			}
+			if(whereCondition != null && !"".equalsIgnoreCase(whereCondition) && !"null".equalsIgnoreCase(whereCondition)){
+				whereCondQuery += whereCondition;
 			}
 			if (JoinQuery != null && !"".equalsIgnoreCase(JoinQuery) && Slicecolumn != null
 					&& !"".equalsIgnoreCase(Slicecolumn)) {
@@ -13113,7 +13128,14 @@ JSONArray columnsListArrayFromQuery = new JSONArray();
 			String dataTypeCountStr = request.getParameter("dataTypeCountObj");
 			String methodName = request.getParameter("methodName");
 			String columnsListForComplexQueries = request.getParameter("columnsListForComplexQueries");
-			
+			String queryForDecoding = request.getParameter("scriptForDecoding");
+			JSONObject queryDecodedObj = decodeSqlQuery(queryForDecoding);
+			String whereCondition = (String) queryDecodedObj.get("whereCondition");
+			if(whereCondition != null && !"".equalsIgnoreCase(whereCondition)) {
+				whereCondition = whereCondition.replaceAll("'", "&aqos;");
+				whereCondition = whereCondition.replaceAll("\\s", ":");
+				whereCondition = whereCondition.replaceAll("<","@LT#").replaceAll(">","@GT#");
+			}
 			JSONArray colArr = new JSONArray();
 			JSONArray colArrForComplexQueries = new JSONArray();
 			String colListStrForComplexQueries="";
@@ -13160,37 +13182,37 @@ JSONArray columnsListArrayFromQuery = new JSONArray();
 						+ "','" + prependFlag + "')  src='images/Guage.svg' class='visualDarkMode' title='Guage chart'></div>"
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','card','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/DashBoardCard.svg' class='visualDarkMode' title='Card'></div>";
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/DashBoardCard.svg' class='visualDarkMode' title='Card'></div>";
 				
 			} else if (colSize <= 2) {
 				if(varCharCnt == 1 && numberCnt == 1) {
 					result += "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','pie','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "') src='images/Pie.svg' class='visualDarkMode' title='Pie chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "') src='images/Pie.svg' class='visualDarkMode' title='Pie chart'></div>"
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','bar','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "')  src='images/Bar.svg' class='visualDarkMode' title='Bar chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Bar.svg' class='visualDarkMode' title='Bar chart'></div>"
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','donut','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "')  src='images/Donut.svg' class='visualDarkMode' title='Donut chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Donut.svg' class='visualDarkMode' title='Donut chart'></div>"
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','column','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "')  src='images/Column.svg' class='visualDarkMode' title='Column chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Column.svg' class='visualDarkMode' title='Column chart'></div>"
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','lines','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "')  src='images/Line.svg' class='visualDarkMode' title='Line chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Line.svg' class='visualDarkMode' title='Line chart'></div>"
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','scatter','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "')  src='images/Scatter.svg' class='visualDarkMode' title='Scatter chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Scatter.svg' class='visualDarkMode' title='Scatter chart'></div>"
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','histogram','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "')  src='images/Histogram.svg' class='visualDarkMode' title='Histogram chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Histogram.svg' class='visualDarkMode' title='Histogram chart'></div>"
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','funnel','" + tableName + "','" + joinQueryFlag + "','" + script
@@ -13198,11 +13220,11 @@ JSONArray columnsListArrayFromQuery = new JSONArray();
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','waterfall','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "')  src='images/Waterfall.svg' class='visualDarkMode' title='Waterfall chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Waterfall.svg' class='visualDarkMode' title='Waterfall chart'></div>"
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','scatterpolar','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "')  src='images/Redar-Chart.svg' class='visualDarkMode' title='Radar chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Redar-Chart.svg' class='visualDarkMode' title='Radar chart'></div>"
 							
 							/*
 							 * +
@@ -13214,15 +13236,15 @@ JSONArray columnsListArrayFromQuery = new JSONArray();
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStrForComplexQueries  + "','treemap','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "')  src='images/Tree_Chart.svg' class='visualDarkMode' title='Tree chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Tree_Chart.svg' class='visualDarkMode' title='Tree chart'></div>"
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','BasicAreaChart','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "') src='images/BasicAreaChart.png' class='visualDarkMode' title='Basic Area chart'></div>"
+							+ "','" + prependFlag + "','" + whereCondition + "') src='images/BasicAreaChart.png' class='visualDarkMode' title='Basic Area chart'></div>"
 							
 							+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 							+ colListStr + "','AreaPiecesChart','" + tableName + "','" + joinQueryFlag + "','" + script
-							+ "','" + prependFlag + "') src='images/AreaPiecesChart.png' class='visualDarkMode' title='Basic Area chart'></div>";
+							+ "','" + prependFlag + "','" + whereCondition + "') src='images/AreaPiecesChart.png' class='visualDarkMode' title='Basic Area chart'></div>";
 
 				}
 				
@@ -13231,31 +13253,31 @@ JSONArray columnsListArrayFromQuery = new JSONArray();
 				if(varCharCnt == 1 && numberCnt >= 1) {
 				result +="<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','bar','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Bar.svg' class='visualDarkMode' title='Bar chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Bar.svg' class='visualDarkMode' title='Bar chart'></div>"
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','column','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Column.svg' class='visualDarkMode' title='Column chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Column.svg' class='visualDarkMode' title='Column chart'></div>"
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','lines','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Line.svg' class='visualDarkMode' title='Line chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Line.svg' class='visualDarkMode' title='Line chart'></div>"
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','scatter','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Scatter.svg' class='visualDarkMode' title='Scatter chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Scatter.svg' class='visualDarkMode' title='Scatter chart'></div>"
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','histogram','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Histogram.svg' class='visualDarkMode' title='Histogram chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Histogram.svg' class='visualDarkMode' title='Histogram chart'></div>"
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','funnel','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Funnel.svg' class='visualDarkMode' title='Funnel chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Funnel.svg' class='visualDarkMode' title='Funnel chart'></div>"
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','candlestick','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Candlestick.svg' class='visualDarkMode' title='Candlestick chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Candlestick.svg' class='visualDarkMode' title='Candlestick chart'></div>"
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','waterfall','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Waterfall.svg' class='visualDarkMode' title='Waterfall chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Waterfall.svg' class='visualDarkMode' title='Waterfall chart'></div>"
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','scatterpolar','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Redar-Chart.svg' class='visualDarkMode' title='Radar chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Redar-Chart.svg' class='visualDarkMode' title='Radar chart'></div>"
 						
 //						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= getSuggestedChartBasedonCols('"
 //						+ colListStr + "','barRotation','" + tableName + "','" + joinQueryFlag + "','" + script
@@ -13263,31 +13285,31 @@ JSONArray columnsListArrayFromQuery = new JSONArray();
 						
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','StackedAreaChart','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "') src='images/StackedAreaChart.png' class='visualDarkMode' title='Stacked Area Chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "') src='images/StackedAreaChart.png' class='visualDarkMode' title='Stacked Area Chart'></div>"
 						
 						+ "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','GradStackAreaChart','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "') src='images/GradientStackedAreaChart.png' class='visualDarkMode' title='Gradient Stacked Area chart'></div>";
+						+ "','" + prependFlag + "','" + whereCondition + "') src='images/GradientStackedAreaChart.png' class='visualDarkMode' title='Gradient Stacked Area chart'></div>";
 		
 				
 				}
 			if(varCharCnt >= 1 && numberCnt == 1) {
 			result+= "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStrForComplexQueries  + "','treemap','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Tree_Chart.svg' class='visualDarkMode' title='Tree chart'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Tree_Chart.svg' class='visualDarkMode' title='Tree chart'></div>"
 						
 						+"<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStrForComplexQueries  + "','sunburst','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/Sunburst_Inner_Icon.svg' class='visualDarkMode' title='SunBurst'></div>"
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/Sunburst_Inner_Icon.svg' class='visualDarkMode' title='SunBurst'></div>"
 						
 						+"<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStrForComplexQueries  + "','sankey','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/sankey_chart.png' class='visualDarkMode' title='Sankey'></div>";
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/sankey_chart.png' class='visualDarkMode' title='Sankey'></div>";
 			}
 			if(varCharCnt == 2 && numberCnt == 1) {
 				result+= "<div class=\"col-lg-4 my-2 px-1 col-md-4 visualChartsByQueryClass\"><img onclick= "+methodName+"('"
 						+ colListStr + "','heatMap','" + tableName + "','" + joinQueryFlag + "','" + script
-						+ "','" + prependFlag + "')  src='images/HeatMap_Inner_Icon.svg' class='visualDarkMode' title='Heat Map'></div>";
+						+ "','" + prependFlag + "','" + whereCondition + "')  src='images/HeatMap_Inner_Icon.svg' class='visualDarkMode' title='Heat Map'></div>";
 						
 			}
 			}
@@ -13319,6 +13341,7 @@ JSONArray columnsListArrayFromQuery = new JSONArray();
 			String Slicecolumn = request.getParameter("SliceColumn");
 			String dragtableName = request.getParameter("dragtableName");
 			String radioButtons = request.getParameter("radioButtons");
+			String whereCondition = request.getParameter("whereCondition");
 			JSONArray axisColsArr = new JSONArray();
 			JSONArray valuesColsArr = new JSONArray();
 			JSONArray axisTablesArr = new JSONArray();
@@ -13407,6 +13430,9 @@ JSONArray columnsListArrayFromQuery = new JSONArray();
 					}
 				}
 			}
+			if(whereCondition != null && !"".equalsIgnoreCase(whereCondition) && !"null".equalsIgnoreCase(whereCondition)){
+				whereCondQuery += whereCondition;
+			}
 			if (JoinQuery != null && !"".equalsIgnoreCase(JoinQuery) && Slicecolumn != null
 					&& !"".equalsIgnoreCase(Slicecolumn)) {
 				whereCondQuery += dragtableName + "." + Slicecolumn + " ";
@@ -13436,7 +13462,7 @@ JSONArray columnsListArrayFromQuery = new JSONArray();
 				for (int c = 0; c < axisColumnsArr.size() - 1; c++) {
 					String fromColumn = (String) axisColumnsArr.get(c);
 					String toColumn = (String) axisColumnsArr.get(c + 1);
-					String dataColumn = (String) valueColumnsArr.get(c);
+					String dataColumn = (String) valueColumnsArr.get(c % valueColumnsArr.size());
 					if (!(aggregateColsObj != null && !aggregateColsObj.isEmpty()
 							&& aggregateColsObj.get(dataColumn) != null
 							&& !"".equalsIgnoreCase(String.valueOf(aggregateColsObj.get(dataColumn))))) {
@@ -18555,5 +18581,22 @@ JSONArray columnsListArrayFromQuery = new JSONArray();
 
 			return resultMap;
 		}
+	public JSONObject decodeSqlQuery(String query)  {
+		JSONObject resultObj  = new JSONObject();
+		try {
+			Select select = (Select) CCJSqlParserUtil.parse(query);
+			PlainSelect ps = (PlainSelect) select.getSelectBody();
+			System.out.println(ps.getWhere().toString());
+			String whereCondition = ps.getWhere().toString();
+			if (!whereCondition.contains("temp")) {
+				resultObj.put("whereCondition", ps.getWhere().toString());
+			}
+
+		}
+		catch (Exception e){
+			e.printStackTrace();
+		}
+		return resultObj;
+	}
 
 }
